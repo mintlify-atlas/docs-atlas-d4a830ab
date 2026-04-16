@@ -1,0 +1,58 @@
+---
+title: "Available packages in the HashiCorp tap"
+description: "Overview of all Homebrew formulae and casks in the official HashiCorp tap — 32 CLI tool formulae and 2 macOS GUI casks across multiple architectures."
+---
+
+The HashiCorp Homebrew tap provides official, signed binaries for HashiCorp products on macOS and Linux. You get the exact same binaries published to [releases.hashicorp.com](https://releases.hashicorp.com) — compiled with the Go version and build flags chosen by the teams who maintain each product. The tap contains two package types: **formulae** for CLI tools (available on both macOS and Linux) and **casks** for macOS GUI applications.
+
+## Package types
+
+<CardGroup cols={2}>
+  <Card title="Formulae" icon="terminal" href="/packages/formulae">
+    32 CLI tool formulae for infrastructure, security, networking, and platform management. Available on macOS and Linux across multiple architectures.
+  </Card>
+  <Card title="Casks" icon="display" href="/packages/casks">
+    2 macOS GUI application casks: Boundary Desktop and Vagrant. Casks install native `.app` or `.pkg` bundles and require macOS.
+  </Card>
+</CardGroup>
+
+## Package summary
+
+| Type | Count | Platforms |
+|------|-------|-----------|
+| Formulae | 32 | macOS, Linux |
+| Casks | 2 | macOS only |
+
+## Supported architectures
+
+The tap publishes binaries for the following platform and architecture combinations. Not every formula supports every architecture — see the [formulae page](/packages/formulae) for per-product details.
+
+| Architecture | Identifier | Notes |
+|---|---|---|
+| macOS Intel | `darwin_amd64` | All formulae and casks |
+| macOS Apple Silicon | `darwin_arm64` | All formulae and casks (most products) |
+| Linux x86-64 | `linux_amd64` | All formulae |
+| Linux ARM 32-bit | `linux_arm` | Select formulae only |
+| Linux ARM 64-bit | `linux_arm64` | Most formulae |
+
+## GA releases only
+
+<Note>
+  Only generally available (GA) releases are published to this tap. Alpha, beta, and release candidate (prerelease) versions will not appear here.
+</Note>
+
+## Searching and inspecting packages
+
+After adding the tap, you can search across all available packages:
+
+```bash
+brew search hashicorp
+```
+
+To view details about a specific package — including its current version, dependencies, and install location — use `brew info` with the fully qualified name:
+
+```bash
+brew info hashicorp/tap/vault
+```
+
+You must always use the `hashicorp/tap/` prefix when referring to packages from this tap outside of `brew search`, since the same product name may exist in other taps.

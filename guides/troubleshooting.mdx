@@ -1,0 +1,159 @@
+---
+title: "Troubleshooting the HashiCorp Homebrew tap"
+description: "Resolve common issues with the HashiCorp Homebrew tap including formula conflicts, tap errors, upgrade failures, and architecture mismatches."
+---
+
+This guide covers common issues you may encounter when using the HashiCorp Homebrew tap and the steps to resolve them. If the issue you are seeing is not listed here, run `brew doctor` to check the overall health of your Homebrew installation before filing a bug report.
+
+<AccordionGroup>
+  <Accordion title="Formula conflict errors">
+    **Symptom:** Homebrew reports a conflict when you try to install a formula, for example:
+
+    ```
+    Error: vault-enterprise: because both install the same binaries, it conflicts with vault.
+    ```
+
+    **Cause:** Enterprise formulae and their open-source counterparts install the same binary name into the same location. Homebrew prevents both from being installed simultaneously.
+
+    **Solution:** Uninstall the conflicting formula before installing the one you want:
+
+    ```bash
+    # Remove the open-source version before installing enterprise
+    brew uninstall hashicorp/tap/vault
+    brew install hashicorp/tap/vault-enterprise
+
+    # Or remove enterprise before installing the open-source version
+    brew uninstall hashicorp/tap/vault-enterprise
+    brew install hashicorp/tap/vault
+    ```
+
+    See [Install HashiCorp enterprise products](/guides/enterprise-products) for the full switching workflow.
+  </Accordion>
+
+  <Accordion title="tap/formula not found">
+    **Symptom:** Homebrew cannot find the formula you are trying to install:
+
+    ```
+    Error: No available formula with the name "vault".
+    ```
+
+    Or Homebrew installs from the wrong tap when you omit the prefix.
+
+    **Cause:** Without the fully qualified `hashicorp/tap/` prefix, Homebrew searches all tapped repositories and may resolve the name to a different tap (such as `homebrew-core`) or find nothing at all.
+
+    **Solution:** Always use the fully qualified name:
+
+    ```bash
+    brew install hashicorp/tap/vault
+    ```
+
+    If you have not yet added the tap, add it explicitly first:
+
+    ```bash
+    brew tap hashicorp/tap
+    brew install hashicorp/tap/vault
+    ```
+  </Accordion>
+
+  <Accordion title="Architecture not supported">
+    **Symptom:** Homebrew installs successfully but the binary does not run, or the formula has no URL for your platform.
+
+    **Cause:** Not every enterprise or community product supports all CPU architectures. For example, `vault-enterprise` and `nomad-enterprise` do not provide a Linux 32-bit ARM (`linux_arm`) build.
+
+    **Solution:** Check the architecture support table in [Install HashiCorp enterprise products](/guides/enterprise-products) to confirm your platform is supported. If it is not, download the binary directly from [releases.hashicorp.com](https://releases.hashicorp.com) and check whether a build for your architecture is available there.
+
+    You can also check which architectures a formula supports by inspecting its definition:
+
+    ```bash
+    brew edit hashicorp/tap/vault-enterprise
+    ```
+  </Accordion>
+
+  <Accordion title="Formula is outdated">
+    **Symptom:** `brew info` or `brew outdated` shows a version older than the latest release on releases.hashicorp.com.
+
+    **Cause:** Your local tap cache may be stale. Homebrew does not automatically fetch the latest formula definitions unless you explicitly update.
+
+    **Solution:** Refresh your tap and then upgrade the formula:
+
+    ```bash
+    brew update && brew upgrade hashicorp/tap/<product>
+    ```
+
+    Formula updates in this tap are automated and typically appear within minutes of a new release. If the latest version is still missing after running `brew update`, wait a few minutes and try again.
+  </Accordion>
+
+  <Accordion title="Prerelease versions">
+    **Symptom:** You want to install an alpha, beta, or release candidate version of a HashiCorp product.
+
+    **Cause:** This tap only distributes generally available (GA) releases. Prereleases — including alpha, beta, and release candidate builds — are not published to this tap.
+
+    **Solution:** Download prerelease binaries directly from [releases.hashicorp.com](https://releases.hashicorp.com). Find your product, select the prerelease version, and download the appropriate archive for your platform. You will need to install it manually rather than through Homebrew.
+  </Accordion>
+
+  <Accordion title="SHA256 mismatch">
+    **Symptom:** Homebrew reports a checksum mismatch during installation:
+
+    ```
+    Error: SHA256 mismatch
+    Expected: abc123...
+    Actual:   def456...
+    ```
+
+    **Cause:** Your local formula cache contains a stale checksum, typically because a formula was updated on the tap but your local copy has not been refreshed.
+
+    **Solution:** Update your tap to pull the latest formula definitions, then retry:
+
+    ```bash
+    brew update
+    brew install hashicorp/tap/<product>
+    ```
+
+    If the mismatch persists after updating, it may indicate a corrupted download cache. Clear it with:
+
+    ```bash
+    brew cleanup hashicorp/tap/<product>
+    brew install hashicorp/tap/<product>
+    ```
+  </Accordion>
+
+  <Accordion title="Cloning tap via SSH">
+    **Symptom:** Running `brew tap hashicorp/tap` fails if your environment is configured to use SSH for GitHub connections and HTTPS is blocked.
+
+    **Cause:** By default, `brew tap hashicorp/tap` uses the HTTPS URL for the repository. In environments where SSH is required for GitHub access, this will fail.
+
+    **Solution:** Pass the SSH URL explicitly when adding the tap:
+
+    ```bash
+    brew tap hashicorp/tap https://github.com/hashicorp/homebrew-tap
+    ```
+
+    Replace the HTTPS URL with the SSH equivalent if needed:
+
+    ```bash
+    brew tap hashicorp/tap git@github.com:hashicorp/homebrew-tap.git
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Useful diagnostic commands
+
+Run these commands to gather information when diagnosing an issue:
+
+```bash
+# Check formula details, including version, URLs, and dependencies
+brew info hashicorp/tap/<product>
+
+# List all installed formulae
+brew list --formula
+
+# Check the overall health of your Homebrew installation
+brew doctor
+
+# Refresh all taps to pull the latest formula definitions
+brew update
+```
+
+<Tip>
+  Run `brew update` before reporting a bug. Many issues are resolved by refreshing the local tap cache to pick up the latest formula changes.
+</Tip>

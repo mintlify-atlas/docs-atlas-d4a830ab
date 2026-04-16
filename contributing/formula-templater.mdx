@@ -1,0 +1,151 @@
+---
+title: "formula_templater CLI: generate Homebrew formula files"
+description: "Reference for the formula_templater CLI tool that generates Homebrew Ruby formula and cask files from HCL configuration and SHA checksums."
+---
+
+`formula_templater` is a Go CLI tool that generates the Ruby `.rb` files that Homebrew uses for both Formulae and Casks. It takes a product name, a version string, and a path to `config.hcl`, fetches SHA256 checksums from `releases.hashicorp.com`, and renders the appropriate Go template to produce a ready-to-commit Ruby file. The tool lives at `util/formula_templater/` and is used both locally by contributors and by the `publish-formula-update.yml` GitHub Actions workflow.
+
+## How it works
+
+1. The CLI parses its arguments and determines whether to generate a Formula or a Cask (via the `-cask` flag).
+2. `shasums.go` fetches the SHA256SUMS file from `https://releases.hashicorp.com/<product>/<version>/<product>_<version>_SHA256SUMS`.
+3. `config.go` parses `config.hcl` using the HashiCorp HCL library and locates the matching `formula` or `cask` block by product name.
+4. The resolved config struct (with SHA values populated) is passed to `formula.tmpl` or `cask.tmpl` via Go's `text/template` package.
+5. The rendered template is written to stdout, which you redirect to the appropriate file.
+
+## Build
+
+```bash
+cd util/formula_templater && go build
+```
+
+This produces a `formula_templater` binary in `util/formula_templater/`. You can also build from the repo root:
+
+```bash
+make formula_templater
+```
+
+## Usage
+
+```bash
+./formula_templater [-cask] PRODUCT VERSION CONFIG_PATH
+```
+
+### Arguments
+
+| Argument | Required | Description |
+|---|---|---|
+| `-cask` | No | Flag — generate a Cask file instead of a Formula file |
+| `PRODUCT` | Yes | Product name as it appears in `config.hcl` and on `releases.hashicorp.com` |
+| `VERSION` | Yes | Semantic version to generate (e.g. `1.6.3`, `2.4.0+ent`) |
+| `CONFIG_PATH` | Yes | Path to the `config.hcl` file |
+
+The tool writes the rendered Ruby file to stdout. Redirect it to the correct location.
+
+## Examples
+
+<CodeGroup>
+
+```bash Generate a Formula
+# Generate a Formula for vault 1.6.3
+./formula_templater vault 1.6.3 ./config.hcl > ../../Formula/vault.rb
+```
+
+```bash Generate a Cask
+# Generate a Cask for vagrant 2.4.0
+./formula_templater -cask vagrant 2.4.0 ./config.hcl > ../../Casks/hashicorp-vagrant.rb
+```
+
+</CodeGroup>
+
+<Note>
+Cask filenames are prefixed with `hashicorp-` by convention (e.g. `hashicorp-vagrant.rb`, `hashicorp-boundary-desktop.rb`). The template itself also uses the `hashicorp-` prefix in the cask identifier: `cask "hashicorp-{{ .Product }}" do`.
+</Note>
+
+## config.hcl schema
+
+`config.hcl` contains one or more `formula` or `cask` blocks, one per product. The `loadConfig` function in `config.go` decodes this file using `hclsimple.DecodeFile` into `Config`, `FormulaConfig`, and `CaskConfig` structs.
+
+### `formula` block
+
+```hcl
+formula {
+    product      = "vault"             # string, required
+    name         = "Vault"             # string, required
+    desc         = "Vault"             # string, required
+    homepage     = "https://..."       # string, required
+    service_args = ["server", "-dev"]  # list of strings, optional
+    recommends   = ["envoy"]           # list of strings, optional
+    architectures {
+        darwin_amd64 = true   # bool, required
+        darwin_arm64 = true   # bool, required
+        linux_amd64  = true   # bool, required
+        linux_arm    = false  # bool, required
+        linux_arm64  = true   # bool, required
+    }
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `product` | string | Yes | Product name on `releases.hashicorp.com`. Also becomes the binary name installed by `bin.install`. |
+| `name` | string | Yes | Ruby class name in the generated `.rb` file (e.g. `Vault`, `ConsulEnterprise`). |
+| `desc` | string | Yes | One-line description shown by `brew info`. |
+| `homepage` | string | Yes | URL for `brew home`. |
+| `service_args` | list of strings | No | Arguments for the `service do ... end` block. When set, the formula registers a Homebrew service (e.g. `["agent", "-dev", "-bind", "127.0.0.1"]` for Consul). |
+| `recommends` | list of strings | No | Packages listed as `depends_on "<name>" => :recommended` in the formula (e.g. `["envoy"]` for `consul-dataplane`). |
+
+### `cask` block
+
+```hcl
+cask {
+    product  = "boundary-desktop"       # string, required
+    name     = "Boundary Desktop"       # string, required
+    desc     = ""                       # string, required
+    homepage = "https://..."            # string, required
+    cask_app = "Boundary.app"           # string, optional — use for .app bundles
+    cask_pkg = "vagrant.pkg"            # string, optional — use for .pkg installers
+    architectures {
+        darwin_amd64 = true
+        darwin_arm64 = true
+        linux_amd64  = false
+        linux_arm    = false
+        linux_arm64  = false
+    }
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `product` | string | Yes | Product name on `releases.hashicorp.com`. The cask identifier becomes `hashicorp-<product>`. |
+| `name` | string | Yes | Human-readable display name. |
+| `desc` | string | Yes | Short description (can be empty string). |
+| `homepage` | string | Yes | Product homepage URL. |
+| `cask_app` | string | No | Name of the `.app` bundle to install (e.g. `"Boundary.app"`). Use this or `cask_pkg`, not both. |
+| `cask_pkg` | string | No | Name of the `.pkg` installer (e.g. `"vagrant.pkg"`). Use this or `cask_app`, not both. |
+
+### `architectures` block (shared)
+
+The `architectures` block is required for both `formula` and `cask` blocks. Each field is a boolean indicating whether a binary or DMG for that platform is available on `releases.hashicorp.com`.
+
+| Field | Platform | CPU type |
+|---|---|---|
+| `darwin_amd64` | macOS | Intel x86-64 |
+| `darwin_arm64` | macOS | Apple Silicon (ARM64) |
+| `linux_amd64` | Linux | x86-64 |
+| `linux_arm` | Linux | ARM 32-bit |
+| `linux_arm64` | Linux | ARM 64-bit |
+
+When `darwin_arm64 = false` but `darwin_amd64 = true`, the formula template emits a `caveats` block notifying users that the ARM64 binary is not yet available and that the AMD64 binary has been installed instead.
+
+### Enterprise products
+
+Products with a `-enterprise` suffix (e.g. `vault-enterprise`) are handled specially in `formula.go`. The `printFormula` function detects the suffix, sets `Variant = "enterprise"`, and strips the suffix from `Product` so that download URLs and the installed binary name resolve correctly. The template then emits `conflicts_with "vault-enterprise"` (for the OSS variant) or `conflicts_with "vault"` (for the enterprise variant).
+
+## Running tests
+
+```bash
+make ci-test-formula_templater
+```
+
+This downloads Go module dependencies, runs the test suite in `formula_test.go` against the fixtures in `testdata/`, and formats output using `tparse`.

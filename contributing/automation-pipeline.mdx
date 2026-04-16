@@ -1,0 +1,197 @@
+---
+title: "Automated formula update pipeline"
+description: "How the HashiCorp tap automatically detects new product releases and updates Homebrew formulae using AWS Lambda and GitHub Actions workflows."
+---
+
+The HashiCorp Homebrew Tap updates formula and cask files automatically whenever a new product version is published. This means contributors rarely need to manually bump versions — the pipeline handles it end-to-end, from release detection to committing the updated `.rb` file to `master`. Understanding this pipeline is useful if you're adding a new product, debugging a missed update, or triggering a manual refresh.
+
+## Pipeline overview
+
+The automation involves two components: an AWS Lambda function (`lambda_trigger`) that detects new releases, and a GitHub Actions workflow (`publish-formula-update.yml`) that regenerates and commits the updated formula or cask file.
+
+```
+releases.hashicorp.com publishes a new version
+        │
+        ▼
+AWS SNS event is emitted for the product release
+        │
+        ▼
+lambda_trigger (AWS Lambda) receives the SNS event
+        │
+        ├─ Is the product in the supported list? ──No──▶ stop
+        │
+        ├─ Fetch latest version from api.releases.hashicorp.com
+        │
+        ├─ Compare against current version in the tap
+        │
+        ├─ Already up to date? ──Yes──▶ stop (returns error)
+        │
+        ▼
+Trigger GitHub repository dispatch event: "version-updated"
+        │
+        ▼
+publish-formula-update.yml workflow starts
+        │
+        ├─ check-version job: confirms update is needed
+        │
+        └─ update-formula job: builds formula_templater,
+           generates new .rb file, commits and pushes to master
+        │
+        ▼
+Updated formula available via `brew upgrade` within minutes
+```
+
+## Lambda trigger (`lambda_trigger`)
+
+The Lambda function in `util/lambda_trigger/lambda_trigger.go` is the entry point for automated updates.
+
+### Supported products
+
+`isProductSupported` checks an incoming SNS release event against a hard-coded slice of product names (defined at line 37 in `lambda_trigger.go`). The current list includes:
+
+```go
+supportedProducts := []string{
+    "vault", "vault-enterprise",
+    "consul", "consul-enterprise",
+    "consul-aws", "consul-dataplane", "consul-esm", "consul-k8s",
+    "consul-template", "consul-terraform-sync",
+    "envconsul", "hc-install", "hcdiag", "hcp",
+    "levant", "nomad", "nomad-enterprise", "nomad-pack",
+    "terraform", "terraform-ls", "tfstacks",
+    "packer", "boundary", "boundary-enterprise",
+    "waypoint", "boundary-desktop",
+    "sentinel", "vagrant", "vlt", "vault-radar", "tf-migrate",
+}
+```
+
+If a product is not in this list, the Lambda returns without triggering a workflow dispatch.
+
+<Note>
+  The `copywrite` and `enos` formulae exist in the tap but are not in this supported products list. They are maintained separately and use GitHub releases rather than the releases.hashicorp.com pipeline, so they are updated manually rather than through the automated Lambda workflow.
+</Note>
+
+### Formula, cask, and combo products
+
+Two package-level variables at the top of `lambda_trigger.go` determine routing:
+
+```go
+// Products that get both a Formula and a Cask update
+var caskAndFormula = []string{"vagrant", "vagrant-vmware-utility"}
+
+// Products that get only a Cask update
+var casks = []string{"boundary-desktop"}
+```
+
+- `isCask(product)` returns `true` if the product is in `casks` or `caskAndFormula`.
+- `isFormula(product)` returns `true` if the product is in `caskAndFormula`, or if it is not a cask-only product.
+- For combo products like `vagrant`, the Lambda fires **two** separate `version-updated` dispatch events — one with `"cask": true` and one with `"cask": false`.
+
+### Version comparison
+
+Before triggering a workflow, the Lambda checks whether the tap is already at the incoming version:
+
+1. For cask products, `getCaskVersion` reads `https://raw.githubusercontent.com/hashicorp/homebrew-tap/master/Casks/hashicorp-<product>.rb` and extracts the `version "..."` line with a regex.
+2. For formula products, `getFormulaVersion` reads the corresponding file under `Formula/`.
+3. If `event.Version == oldVersion`, the Lambda returns an error (`"formula/cask is already latest version"`) and no workflow is triggered.
+4. If the formula or cask file doesn't exist yet (`404`), `errBrewVersionNotFound` is returned and the Lambda treats this as a new product, proceeding with the dispatch.
+
+### Latest version lookup
+
+`releases.go` queries `https://api.releases.hashicorp.com/v1/releases/<product>/latest?license_class=<oss|enterprise>` to resolve the canonical latest version. For enterprise products (those ending in `-enterprise`), it sets `license_class=enterprise` and trims the suffix before querying, then appends `+ent` to the returned version string.
+
+### GitHub workflow dispatch
+
+When an update is needed, `triggerGithubWorkflow` POSTs a repository dispatch event to the GitHub API:
+
+```json
+{
+  "event_type": "version-updated",
+  "client_payload": {
+    "name": "<product>",
+    "version": "<version>",
+    "cask": "<true|false>"
+  }
+}
+```
+
+The `GITHUB_TOKEN` environment variable must be set in the Lambda's execution environment for this call to succeed.
+
+## GitHub Actions workflow (`publish-formula-update.yml`)
+
+The `publish-formula-update.yml` workflow listens for `repository_dispatch` events with type `version-updated`. It runs two jobs sequentially.
+
+### `check-version` job
+
+This job re-verifies that the incoming version is actually newer than what is currently committed, using a `.github/scripts/check-version.sh` script. It sets three outputs:
+
+| Output | Description |
+|---|---|
+| `should_update` | `true` if the incoming version is newer, `false` otherwise |
+| `current_version` | The version currently in the tap |
+| `incoming_version` | The version from the dispatch payload |
+
+If `should_update` is `false`, the workflow logs a notice and the `update-formula` job is skipped.
+
+### `update-formula` job
+
+This job only runs when `should_update == 'true'`. It:
+
+1. Checks out the `master` branch using the `HOMEBREW_TAP_UPDATER_TOKEN` secret.
+2. Sets up Go using the version specified in `util/formula_templater/go.mod`.
+3. Builds the `formula_templater` binary:
+   ```bash
+   cd util/formula_templater && go build
+   ```
+4. Generates the updated formula or cask file, depending on the `cask` payload field:
+
+<CodeGroup>
+
+```bash Formula update
+./util/formula_templater/formula_templater \
+  <product> \
+  <version> \
+  ./util/formula_templater/config.hcl > ./Formula/<product>.rb
+```
+
+```bash Cask update
+./util/formula_templater/formula_templater \
+  -cask \
+  <product> \
+  <version> \
+  ./util/formula_templater/config.hcl > ./Casks/hashicorp-<product>.rb
+```
+
+</CodeGroup>
+
+5. Commits the changed file with the message `Bump <product> to <version>`:
+   ```bash
+   git add Formula/*.rb Casks/*.rb
+   git commit -m "Bump vault to 1.18.0"
+   git pull --rebase
+   git push
+   ```
+
+The `git pull --rebase` before push narrows the window for race conditions when multiple product releases trigger concurrent workflow runs.
+
+## Manual updates
+
+If the automated pipeline misses a release or encounters an error, you can trigger an update manually using the `manual-publish-formula-update.yml` workflow from the GitHub Actions UI. It accepts three inputs:
+
+| Input | Description |
+|---|---|
+| `product` | Product name (e.g. `vault`, `vault-enterprise`) |
+| `version` | Semantic version string (e.g. `1.18.0`) |
+| `is_cask` | Check this box if updating a Cask rather than a Formula |
+
+<Note>
+For casks, the `formula_templater` automatically prepends `hashicorp-` to the output filename. Enter only the bare product name (e.g. `vagrant`, not `hashicorp-vagrant`) in the `product` input.
+</Note>
+
+## CI workflow (`ci.yml`)
+
+The `ci.yml` workflow runs on pull requests and on pushes that touch `util/**` or the `Makefile`. It builds and tests both utilities:
+
+- **`build-templater` job**: runs `make formula_templater` then `make ci-test-formula_templater`.
+- **`build-trigger` job**: runs `make lambda_trigger` then `make ci-test-lambda_trigger`.
+
+Duplicate workflow runs on branch-push + PR are suppressed via the `concurrency` group, which cancels in-progress runs for the same ref.

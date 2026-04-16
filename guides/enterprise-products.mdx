@@ -1,0 +1,91 @@
+---
+title: "Install HashiCorp enterprise products"
+description: "Install Vault Enterprise, Consul Enterprise, Nomad Enterprise, and Boundary Enterprise via the official HashiCorp Homebrew tap with one brew command."
+---
+
+Enterprise editions of HashiCorp products are available in this tap alongside their open-source counterparts. Each enterprise formula installs the same binary that HashiCorp publishes to releases.hashicorp.com, with the `+ent` version suffix that distinguishes enterprise builds.
+
+## Available enterprise formulae
+
+The following enterprise products are available in the tap:
+
+<CardGroup cols={2}>
+  <Card title="Vault Enterprise" icon="shield-check" href="https://www.vaultproject.io">
+    Secrets management with enterprise features such as namespaces, HSM support, and replication.
+  </Card>
+  <Card title="Consul Enterprise" icon="network" href="https://www.consul.io">
+    Service mesh and service discovery with enterprise governance and multi-datacenter features.
+  </Card>
+  <Card title="Nomad Enterprise" icon="server" href="https://www.nomadproject.io/">
+    Workload orchestration with enterprise features such as namespaces, resource quotas, and audit logging.
+  </Card>
+  <Card title="Boundary Enterprise" icon="lock" href="https://www.boundaryproject.io/">
+    Identity-based access management with enterprise features such as multi-hop sessions and credential brokering.
+  </Card>
+</CardGroup>
+
+## Install commands
+
+Use the fully qualified tap prefix when installing enterprise formulae:
+
+```bash
+brew install hashicorp/tap/vault-enterprise
+brew install hashicorp/tap/consul-enterprise
+brew install hashicorp/tap/nomad-enterprise
+brew install hashicorp/tap/boundary-enterprise
+```
+
+If you have not yet added the tap, Homebrew will add it automatically when you run any of the commands above. You can also add it explicitly first:
+
+```bash
+brew tap hashicorp/tap
+```
+
+## Conflicts with open-source editions
+
+Each enterprise formula declares a conflict with its open-source counterpart. Homebrew enforces this — you cannot have both `vault` and `vault-enterprise` installed at the same time on the same system.
+
+<Warning>
+  Attempting to install an enterprise formula when the open-source version is already installed (or vice versa) will result in a conflict error. You must uninstall one before installing the other.
+</Warning>
+
+### Switching between OSS and enterprise
+
+Use the following pattern to switch from the open-source edition to an enterprise edition:
+
+<Steps>
+  <Step title="Uninstall the open-source formula">
+    ```bash
+    brew uninstall hashicorp/tap/vault
+    ```
+  </Step>
+  <Step title="Install the enterprise formula">
+    ```bash
+    brew install hashicorp/tap/vault-enterprise
+    ```
+  </Step>
+</Steps>
+
+To switch back from enterprise to open-source, reverse the steps: uninstall the enterprise formula first, then install the open-source one.
+
+## Architecture support
+
+Each enterprise formula supports specific CPU architectures. The table below lists the supported platforms for each product, derived from the tap's configuration:
+
+| Formula | macOS (Intel) | macOS (Apple Silicon) | Linux (amd64) | Linux (arm) | Linux (arm64) |
+|---|---|---|---|---|---|
+| `vault-enterprise` | Yes | Yes | Yes | No | Yes |
+| `consul-enterprise` | Yes | Yes | Yes | Yes | Yes |
+| `nomad-enterprise` | Yes | Yes | Yes | No | Yes |
+| `boundary-enterprise` | Yes | Yes | Yes | Yes | Yes |
+
+If you are on an unsupported architecture, Homebrew will not find a matching URL in the formula and the installation will fail. See the [troubleshooting guide](/guides/troubleshooting) for more detail.
+
+## License requirements
+
+Enterprise binaries require a valid HashiCorp enterprise license to run. The binary installs and starts without a license, but most enterprise features will not be available until you configure a license. Refer to the documentation for each product for license configuration instructions:
+
+- [Vault Enterprise licensing](https://developer.hashicorp.com/vault/docs/enterprise/license)
+- [Consul Enterprise licensing](https://developer.hashicorp.com/consul/docs/enterprise/license)
+- [Nomad Enterprise licensing](https://developer.hashicorp.com/nomad/docs/enterprise#nomad-enterprise-license)
+- [Boundary Enterprise licensing](https://developer.hashicorp.com/boundary/docs/enterprise)

@@ -1,0 +1,113 @@
+---
+title: "Formulae: HashiCorp CLI tools via Homebrew"
+description: "Complete list of HashiCorp CLI tool formulae available in the official tap, with install commands and supported platform architectures."
+---
+
+Homebrew formulae are package definitions that download and install command-line tools. The HashiCorp tap includes 32 formulae covering infrastructure automation, secrets management, service networking, access management, and platform tooling. Most formulae install the official, signed binary published by HashiCorp — identical to what you would download from [releases.hashicorp.com](https://releases.hashicorp.com). A small number of formulae (`copywrite`, `enos`) are maintained differently and fetch their binaries from GitHub releases.
+
+## Install pattern
+
+```bash
+brew install hashicorp/tap/<product>
+```
+
+Always use the fully qualified `hashicorp/tap/` prefix to ensure you install from the official HashiCorp tap rather than another source.
+
+## Architecture key
+
+The tables below use abbreviations for supported platforms:
+
+| Symbol | Platform |
+|--------|----------|
+| ✅ | Supported |
+| ❌ | Not available |
+
+**Columns:** macOS Intel (`darwin_amd64`) · macOS Apple Silicon (`darwin_arm64`) · Linux x86-64 (`linux_amd64`) · Linux ARM 32-bit (`linux_arm`) · Linux ARM 64-bit (`linux_arm64`)
+
+---
+
+## Infrastructure and orchestration
+
+<Note>
+  Enterprise formulae (e.g., `nomad-enterprise`) require a valid HashiCorp enterprise license to run. Install and upgrade work the same way as the community editions.
+</Note>
+
+| Formula | Description | Install command | macOS Intel | macOS AS | Linux x86-64 | Linux ARM | Linux ARM64 |
+|---------|-------------|-----------------|:-----------:|:--------:|:------------:|:---------:|:-----------:|
+| `terraform` | Infrastructure as code tool for provisioning and managing cloud resources | `brew install hashicorp/tap/terraform` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `terraform-ls` | Terraform language server for IDE integrations | `brew install hashicorp/tap/terraform-ls` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `tfstacks` | Terraform Stacks CLI for managing multi-configuration deployments | `brew install hashicorp/tap/tfstacks` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `tf-migrate` | Terraform Migrate tool for state and configuration migrations | `brew install hashicorp/tap/tf-migrate` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `nomad` | Workload orchestrator for deploying and managing applications | `brew install hashicorp/tap/nomad` | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `nomad-enterprise` | Nomad Enterprise with advanced scheduling and governance features | `brew install hashicorp/tap/nomad-enterprise` | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `nomad-pack` | Package manager for Nomad — install and share Nomad job templates | `brew install hashicorp/tap/nomad-pack` | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `levant` | Templating and deployment tool for Nomad jobs | `brew install hashicorp/tap/levant` | ✅ | ✅ | ✅ | ❌ | ✅ |
+
+---
+
+## Security and secrets
+
+| Formula | Description | Install command | macOS Intel | macOS AS | Linux x86-64 | Linux ARM | Linux ARM64 |
+|---------|-------------|-----------------|:-----------:|:--------:|:------------:|:---------:|:-----------:|
+| `vault` | Secrets management, encryption, and identity tool | `brew install hashicorp/tap/vault` | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `vault-enterprise` | Vault Enterprise with replication, HSM, and governance features | `brew install hashicorp/tap/vault-enterprise` | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `vault-radar` | Vault Radar CLI for detecting secrets and sensitive data in codebases | `brew install hashicorp/tap/vault-radar` | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `vlt` | Vlt CLI for interacting with HCP Vault Secrets | `brew install hashicorp/tap/vlt` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `sentinel` | Policy-as-code framework for fine-grained access control | `brew install hashicorp/tap/sentinel` | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## Service networking
+
+| Formula | Description | Install command | macOS Intel | macOS AS | Linux x86-64 | Linux ARM | Linux ARM64 |
+|---------|-------------|-----------------|:-----------:|:--------:|:------------:|:---------:|:-----------:|
+| `consul` | Service mesh and service discovery tool | `brew install hashicorp/tap/consul` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `consul-enterprise` | Consul Enterprise with advanced federation and governance | `brew install hashicorp/tap/consul-enterprise` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `consul-dataplane` | Lightweight Consul data plane proxy process | `brew install hashicorp/tap/consul-dataplane` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `consul-k8s` | CLI for managing Consul on Kubernetes clusters | `brew install hashicorp/tap/consul-k8s` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `consul-template` | Template rendering, notifier, and supervisor driven by Consul data | `brew install hashicorp/tap/consul-template` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `consul-terraform-sync` | Network infrastructure automation using Consul and Terraform | `brew install hashicorp/tap/consul-terraform-sync` | ✅ | ❌ | ✅ | ✅ | ✅ |
+| `consul-aws` | Consul AWS integration for syncing services between Consul and AWS Cloud Map | `brew install hashicorp/tap/consul-aws` | ✅ | ❌ | ✅ | ❌ | ✅ |
+| `consul-esm` | Consul External Service Monitor for health-checking external nodes | `brew install hashicorp/tap/consul-esm` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `envconsul` | Launch and configure applications using Consul and Vault data | `brew install hashicorp/tap/envconsul` | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## Access management
+
+| Formula | Description | Install command | macOS Intel | macOS AS | Linux x86-64 | Linux ARM | Linux ARM64 |
+|---------|-------------|-----------------|:-----------:|:--------:|:------------:|:---------:|:-----------:|
+| `boundary` | Identity-based access management for dynamic infrastructure | `brew install hashicorp/tap/boundary` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `boundary-enterprise` | Boundary Enterprise with session recording and governance features | `brew install hashicorp/tap/boundary-enterprise` | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## Platform and tools
+
+| Formula | Description | Install command | macOS Intel | macOS AS | Linux x86-64 | Linux ARM | Linux ARM64 |
+|---------|-------------|-----------------|:-----------:|:--------:|:------------:|:---------:|:-----------:|
+| `packer` | Machine image builder for multiple platforms and providers | `brew install hashicorp/tap/packer` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `waypoint` | Application build, deploy, and release tool | `brew install hashicorp/tap/waypoint` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `hcp` | HCP CLI for interacting with HashiCorp Cloud Platform | `brew install hashicorp/tap/hcp` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `hcdiag` | HashiCorp Diagnostics — collect and bundle support diagnostics | `brew install hashicorp/tap/hcdiag` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `hc-install` | hc-install CLI for programmatic installation of HashiCorp tools | `brew install hashicorp/tap/hc-install` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `vagrant` | Development environment manager (Linux only — see also the [Vagrant cask](/packages/casks)) | `brew install hashicorp/tap/vagrant` | ❌ | ❌ | ✅ | ❌ | ❌ |
+| `copywrite` | Utilities for managing copyright headers and license files in GitHub repos | `brew install hashicorp/tap/copywrite` | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `enos` | Quality-as-code tool for writing Terraform-based quality requirement scenarios (requires `terraform`) | `brew install hashicorp/tap/enos` | ✅ | ✅ | ✅ | ❌ | ✅ |
+
+---
+
+## Architecture notes
+
+<Warning>
+  Some formulae do not support every architecture. Installing on an unsupported platform will fail. Check the tables above before installing on Linux ARM 32-bit or macOS Apple Silicon.
+</Warning>
+
+Products with restricted architecture support:
+
+- **`consul-aws`** — not available on `darwin_arm64` or `linux_arm`
+- **`consul-terraform-sync`** — not available on `darwin_arm64`
+- **`nomad`**, **`nomad-enterprise`**, **`nomad-pack`**, **`levant`** — not available on `linux_arm`
+- **`vault`**, **`vault-enterprise`**, **`vault-radar`** — not available on `linux_arm`
+- **`vagrant`** (formula) — Linux `linux_amd64` only; use the [Vagrant cask](/packages/casks) on macOS
+- **`copywrite`**, **`enos`** — not available on `linux_arm`

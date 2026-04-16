@@ -1,0 +1,209 @@
+---
+title: "Add a new product formula or cask"
+description: "Step-by-step guide to adding a new HashiCorp product to the Homebrew tap as a Formula or Cask — from config.hcl changes to opening a PR."
+---
+
+Adding support for a new HashiCorp product requires changes in three places: the `lambda_trigger` supported-products list, the `config.hcl` product definition, and the generated Ruby formula or cask file. This guide walks through each step.
+
+<Note>
+The product must be available on [releases.hashicorp.com](https://releases.hashicorp.com) with downloadable binaries (for a Formula) or `.dmg`/`.pkg` installers (for a Cask) before it can be added to the tap.
+</Note>
+
+## Steps
+
+<Steps>
+
+<Step title="Clone the repository">
+
+```bash
+git clone git@github.com:hashicorp/homebrew-tap.git
+cd homebrew-tap
+```
+
+</Step>
+
+<Step title="Add the product to the supported list in lambda_trigger">
+
+Open `util/lambda_trigger/lambda_trigger.go` and add your product to the `supportedProducts` slice inside the `isProductSupported` function (line 37):
+
+```go
+func isProductSupported(product string) bool {
+    supportedProducts := []string{
+        "vault",
+        "vault-enterprise",
+        "consul",
+        // ... existing products ...
+        "awesomeproject", // add your product here
+    }
+    // ...
+}
+```
+
+This list controls which SNS release events the Lambda function acts on.
+
+</Step>
+
+<Step title="If the product has a cask, update the cask slices">
+
+Near the top of `lambda_trigger.go`, two package-level variables control cask routing:
+
+```go
+// List of products which have cask and formula
+var caskAndFormula = []string{"vagrant", "vagrant-vmware-utility"}
+
+// List of products which have cask only
+var casks = []string{"boundary-desktop"}
+```
+
+- If the product should be delivered as **both** a Formula and a Cask (e.g. `vagrant`), add it to `caskAndFormula`.
+- If the product is **cask only** (e.g. `boundary-desktop`), add it to `casks`.
+- If the product is **formula only**, no change is needed here — `isFormula` returns `true` for any product not in `casks` or `caskAndFormula`.
+
+</Step>
+
+<Step title="Add a config block to config.hcl">
+
+Open `util/formula_templater/config.hcl` and add a `formula` block for your product. The minimum required fields are `product`, `name`, `desc`, `homepage`, and the `architectures` block.
+
+```hcl
+formula {
+    product = "awesomeproject"
+    name = "AwesomeProject"
+    desc = "Awesome Project"
+    homepage = "https://github.com/hashicorp/awesomeproject"
+    architectures {
+        darwin_amd64 = true
+        darwin_arm64 = true
+        linux_amd64  = true
+        linux_arm    = true
+        linux_arm64  = true
+    }
+}
+```
+
+Set each architecture flag to `true` only if the corresponding binary is available on [releases.hashicorp.com](https://releases.hashicorp.com) for that platform. See the [architecture support table](#architecture-support) below for field-to-platform mappings.
+
+<Tip>
+If `darwin_arm64` binaries are not yet published for a product, set `darwin_arm64 = false`. The `formula.tmpl` template handles this gracefully — it falls back to the `darwin_amd64` binary and emits a `caveats` block explaining the limitation.
+</Tip>
+
+</Step>
+
+<Step title="For cask support: use a cask block and set cask_app or cask_pkg">
+
+If the product distributes a macOS GUI app, add a separate `cask` block (not `formula`) to `config.hcl`. Use `cask_app` for `.app` bundles or `cask_pkg` for `.pkg` installers:
+
+```hcl
+# .app bundle (e.g. Boundary Desktop)
+cask {
+    product  = "awesomeproject"
+    name     = "AwesomeProject"
+    desc     = "Awesome Project"
+    homepage = "https://github.com/hashicorp/awesomeproject"
+    cask_app = "AwesomeProject.app"
+    architectures {
+        darwin_amd64 = true
+        darwin_arm64 = true
+        linux_amd64  = false
+        linux_arm    = false
+        linux_arm64  = false
+    }
+}
+
+# .pkg installer (e.g. Vagrant)
+cask {
+    product  = "awesomeproject"
+    name     = "AwesomeProject"
+    desc     = "Awesome Project"
+    homepage = "https://github.com/hashicorp/awesomeproject"
+    cask_pkg = "awesomeproject.pkg"
+    architectures {
+        darwin_amd64 = true
+        darwin_arm64 = true
+        linux_amd64  = false
+        linux_arm    = false
+        linux_arm64  = false
+    }
+}
+```
+
+Note that `cask` blocks are separate from `formula` blocks. A product like `vagrant` has both a `formula` block (for Linux) and a `cask` block (for macOS).
+
+</Step>
+
+<Step title="Build the formula_templater CLI">
+
+```bash
+cd util/formula_templater && go build
+```
+
+This produces a `formula_templater` binary in the same directory.
+
+</Step>
+
+<Step title="Generate the Formula file">
+
+Run the templater with the product name, a known version, and the config path. Pipe the output to the correct location under `Formula/`:
+
+```bash
+./formula_templater awesomeproject 1.0.0 ./config.hcl > ../../Formula/awesomeproject.rb
+```
+
+Verify the generated file looks correct before committing.
+
+</Step>
+
+<Step title="Generate the Cask file (if applicable)">
+
+Pass the `-cask` flag to generate a cask instead. Cask filenames are prefixed with `hashicorp-`:
+
+```bash
+./formula_templater -cask awesomeproject 1.0.0 ./config.hcl > ../../Casks/hashicorp-awesomeproject.rb
+```
+
+</Step>
+
+<Step title="Open a pull request">
+
+Commit all changed files — the lambda trigger source, `config.hcl`, and the generated `.rb` file(s) — and open a PR against `master`. Once merged, the new product will be available via the tap within minutes.
+
+</Step>
+
+</Steps>
+
+## Architecture support
+
+The `architectures` block fields map directly to platforms and CPU types:
+
+| Field | Platform | CPU |
+|---|---|---|
+| `darwin_amd64` | macOS | Intel x86-64 |
+| `darwin_arm64` | macOS | Apple Silicon (ARM64) |
+| `linux_amd64` | Linux | x86-64 |
+| `linux_arm` | Linux | ARM 32-bit |
+| `linux_arm64` | Linux | ARM 64-bit |
+
+Set any field to `false` if the product does not publish a binary for that architecture. The `formula.tmpl` template skips the corresponding `url` / `sha256` block and, for a missing `darwin_arm64`, emits a fallback caveat instead.
+
+## Enterprise products
+
+For enterprise variants, use the `-enterprise` suffix in the `product` field (e.g. `vault-enterprise`, `consul-enterprise`). The `printFormula` function in `formula.go` automatically strips the suffix and sets a `Variant = "enterprise"` field, which the template uses to emit a `conflicts_with` stanza pointing at the OSS package.
+
+```hcl
+formula {
+    product = "vault-enterprise"
+    name    = "VaultEnterprise"
+    desc    = "Vault Enterprise"
+    homepage = "https://www.vaultproject.io"
+    architectures {
+        darwin_amd64 = true
+        darwin_arm64 = true
+        linux_amd64  = true
+        linux_arm    = false
+        linux_arm64  = true
+    }
+    service_args = ["server", "-dev"]
+}
+```
+
+The Lambda trigger in `releases.go` queries `api.releases.hashicorp.com` with `license_class=enterprise` for products ending in `-enterprise`, so versioning is handled automatically.

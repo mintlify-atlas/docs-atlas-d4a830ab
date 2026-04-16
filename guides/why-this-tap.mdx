@@ -1,0 +1,34 @@
+---
+title: "Why use the official HashiCorp tap?"
+description: "Understand why HashiCorp maintains its own Homebrew tap with signed, official binaries instead of relying on community-maintained taps."
+---
+
+This guide explains the key differences between the official HashiCorp Homebrew tap and community-maintained alternatives such as `homebrew-core`. Understanding these differences helps you choose the right tap for your requirements.
+
+## Official, signed binaries
+
+Formulae in this tap distribute the exact same binaries that HashiCorp publishes to [releases.hashicorp.com](https://releases.hashicorp.com) — byte for byte. You are not getting a recompiled version of the software; you are getting the same artifact that HashiCorp's release pipeline produced and tested.
+
+On macOS, these binaries are signed by HashiCorp. You can verify the code signature yourself by following the instructions on the [HashiCorp Security page](https://www.hashicorp.com/security#code-signature-verification). This gives you a cryptographic guarantee that the binary has not been tampered with since it left HashiCorp's build system.
+
+## Deliberate build choices
+
+HashiCorp's engineering teams choose the Go version and build flags for each product deliberately, taking into account support timelines, security advisories, and product-specific concerns. The binaries distributed through this tap reflect exactly those choices.
+
+Community taps such as `homebrew-core` compile HashiCorp software on Homebrew's own infrastructure using the local formula definition. The resulting binary may differ in subtle but meaningful ways — a different Go toolchain version, different CGO settings, or different linker flags — and those differences are not something HashiCorp can support.
+
+## Automated updates
+
+Formula updates in this tap are automated. When HashiCorp publishes a new release to releases.hashicorp.com, an AWS Lambda function detects the new release and triggers a GitHub Actions workflow that updates the formula. New versions are typically available within minutes of a release, with no manual pull request required.
+
+This means you can run `brew upgrade hashicorp/tap/<product>` and reliably get the latest GA release shortly after it ships.
+
+## When to choose the community tap
+
+The community-maintained tap (`homebrew-core`) compiles HashiCorp software from source on Homebrew's own infrastructure. This approach is consistent with how every other formula in `homebrew-core` is built, which is important to Homebrew's core team. HashiCorp does not maintain formulae in `homebrew-core` for this reason — the core team prefers that tap to remain community-built from source. See the [relevant discussion](https://discourse.brew.sh/t/maintenance-of-formulas-by-vendor/7649) for more context.
+
+If you specifically need a source-built binary — for auditing, reproducibility, or policy reasons — the community tap is a valid choice.
+
+<Note>
+  The same HashiCorp product may appear in both this tap and `homebrew-core`. Always use the fully qualified `hashicorp/tap/<product>` prefix when referencing formulae from this tap to avoid ambiguity. For example, use `brew install hashicorp/tap/vault` rather than `brew install vault`.
+</Note>

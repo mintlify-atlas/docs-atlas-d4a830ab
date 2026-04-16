@@ -1,0 +1,73 @@
+{
+  "projectType": "infrastructure",
+  "projectName": "HashiCorp Homebrew Tap",
+  "projectDescription": "The official HashiCorp Homebrew tap that distributes signed, official binaries for HashiCorp products on macOS and Linux via Homebrew.",
+  "theme": "aspen",
+  "primaryColor": "#1464dc",
+  "lightColor": "#042c7b",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Available Packages",
+            "pages": [
+              "packages/overview",
+              "packages/formulae",
+              "packages/casks"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/why-this-tap",
+              "guides/enterprise-products",
+              "guides/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Contributing",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/overview",
+              "contributing/adding-a-formula",
+              "contributing/formula-templater",
+              "contributing/automation-pipeline"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Official HashiCorp-maintained Homebrew tap with signed binaries",
+    "Exact byte-for-byte binaries from releases.hashicorp.com",
+    "Support for macOS (Intel and Apple Silicon) and Linux (amd64, arm, arm64)",
+    "Automated formula updates triggered by AWS Lambda on new releases",
+    "Support for both Homebrew Formulae (CLI tools) and Casks (GUI apps)",
+    "Enterprise product support alongside open-source versions",
+    "Go-based formula templater for generating Ruby formula/cask files"
+  ],
+  "publicApiSurface": [
+    "brew install hashicorp/tap/<product>",
+    "brew tap hashicorp/tap",
+    "brew tap hashicorp/tap https://github.com/hashicorp/homebrew-tap",
+    "formula_templater [-cask] PRODUCT VERSION CONFIG_PATH",
+    "Formula products: vault, consul, terraform, nomad, boundary, packer, waypoint, sentinel, hcp, hcdiag, hc-install, levant, nomad-pack, consul-template, consul-terraform-sync, consul-dataplane, consul-k8s, consul-esm, consul-aws, envconsul, vlt, vault-radar, tf-migrate, tfstacks, terraform-ls",
+    "Enterprise formulae: vault-enterprise, consul-enterprise, nomad-enterprise, boundary-enterprise",
+    "Casks: hashicorp-boundary-desktop, hashicorp-vagrant"
+  ]
+}

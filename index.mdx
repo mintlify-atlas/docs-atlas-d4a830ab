@@ -1,97 +1,89 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "HashiCorp Homebrew Tap"
+description: "Install official, signed HashiCorp binaries on macOS and Linux using Homebrew. Get the exact same binaries published to releases.hashicorp.com."
 ---
 
-## Setting up
+The HashiCorp Homebrew Tap is the official source for installing HashiCorp products via Homebrew on macOS and Linux. Unlike community-maintained taps, this tap distributes the exact, byte-for-byte binaries that HashiCorp publishes — signed by HashiCorp, built with deliberate Go version and build flag choices, and automatically updated when new releases ship.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install your first HashiCorp product in under a minute
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Available packages" icon="box" href="/packages/overview">
+    Browse all formulae and casks available in this tap
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Why use this tap?" icon="shield-check" href="/guides/why-this-tap">
+    Learn why signed, official binaries matter
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Enterprise products" icon="building" href="/guides/enterprise-products">
+    Install Vault, Consul, Nomad, and Boundary Enterprise
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Install a package
 
-Everything you need to create world-class documentation.
+Add the tap and install any HashiCorp product with a single command:
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+```bash
+brew install hashicorp/tap/terraform
+```
 
-## Need inspiration?
+Or add the tap first to make all packages searchable:
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+```bash
+brew tap hashicorp/tap
+brew install hashicorp/tap/vault
+```
+
+## What's available
+
+This tap includes **32 formulae** (CLI tools) and **2 casks** (GUI apps) spanning the full HashiCorp product portfolio.
+
+<CardGroup cols={3}>
+  <Card title="Formulae" icon="terminal" href="/packages/formulae">
+    32 CLI tools including Terraform, Vault, Consul, Nomad, Packer, and more
+  </Card>
+  <Card title="Casks" icon="window" href="/packages/casks">
+    GUI apps: Boundary Desktop and Vagrant for macOS
+  </Card>
+  <Card title="Enterprise" icon="star" href="/guides/enterprise-products">
+    Enterprise editions of Vault, Consul, Nomad, and Boundary
+  </Card>
+</CardGroup>
+
+## Get started
+
+<Steps>
+  <Step title="Install Homebrew">
+    If you don't have Homebrew installed, get it from [brew.sh](https://brew.sh):
+
+    ```bash
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    ```
+  </Step>
+  <Step title="Add the tap">
+    Add the HashiCorp tap to your Homebrew installation:
+
+    ```bash
+    brew tap hashicorp/tap
+    ```
+  </Step>
+  <Step title="Install a product">
+    Install any HashiCorp product using the fully qualified name:
+
+    ```bash
+    brew install hashicorp/tap/terraform
+    ```
+  </Step>
+  <Step title="Verify the installation">
+    Confirm the binary is installed and check its version:
+
+    ```bash
+    terraform --version
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Prereleases — including alphas, betas, and release candidates — are not available in this tap. Only generally available (GA) releases are published here.
+</Note>

@@ -1,0 +1,80 @@
+---
+title: "Casks: HashiCorp GUI apps for macOS"
+description: "Install HashiCorp GUI applications on macOS using Homebrew Casks — covers Boundary Desktop and Vagrant with architecture support details."
+---
+
+Homebrew Casks extend Homebrew to install macOS GUI applications. Instead of compiling or installing command-line binaries, a cask downloads a `.dmg`, `.pkg`, or `.zip` and installs the resulting application bundle into your system. The HashiCorp tap includes two casks: **Boundary Desktop** (a `.app` bundle) and **Vagrant** (a `.pkg` installer).
+
+<Note>
+  Casks are macOS-only. If you are on Linux and want to use Vagrant, install the [`vagrant` formula](/packages/formulae) instead, which provides the Vagrant CLI on `linux_amd64`.
+</Note>
+
+## Cask names and the `hashicorp-` prefix
+
+Both HashiCorp casks use the `hashicorp-` prefix in their names (`hashicorp-boundary-desktop`, `hashicorp-vagrant`). This distinguishes them from any formulae of the same product name in the tap and from identically named packages in other taps.
+
+---
+
+## Boundary Desktop
+
+Boundary Desktop is the official macOS GUI client for [HashiCorp Boundary](https://www.boundaryproject.io/). It lets you browse authorized targets, start sessions, and manage credentials without using the `boundary` CLI directly.
+
+```bash
+brew install hashicorp/tap/hashicorp-boundary-desktop
+```
+
+**What it installs:** `Boundary.app` — a native macOS application bundle placed in `/Applications`.
+
+**Supported architectures:**
+
+| Architecture | Supported |
+|---|---|
+| macOS Intel (`darwin_amd64`) | ✅ |
+| macOS Apple Silicon (`darwin_arm64`) | ✅ |
+| Linux | ❌ |
+
+<Tip>
+  To upgrade Boundary Desktop to the latest release, run:
+
+  ```bash
+  brew upgrade hashicorp/tap/hashicorp-boundary-desktop
+  ```
+</Tip>
+
+---
+
+## Vagrant
+
+Vagrant is a development environment automation tool. The macOS cask installs Vagrant as a system-level `.pkg` bundle, which sets up the `vagrant` CLI and supporting components across your machine.
+
+```bash
+brew install hashicorp/tap/hashicorp-vagrant
+```
+
+**What it installs:** `vagrant.pkg` — a macOS package installer that places the Vagrant binary and daemon components system-wide. The cask also registers an uninstall script so `brew uninstall hashicorp/tap/hashicorp-vagrant` can cleanly remove all components.
+
+**Supported architectures:**
+
+| Architecture | Supported |
+|---|---|
+| macOS Intel (`darwin_amd64`) | ✅ |
+| macOS Apple Silicon (`darwin_arm64`) | ✅ |
+| Linux | ❌ |
+
+<Note>
+  Linux users can install the Vagrant CLI using the `vagrant` formula:
+
+  ```bash
+  brew install hashicorp/tap/vagrant
+  ```
+
+  The formula supports `linux_amd64` only.
+</Note>
+
+<Tip>
+  To upgrade Vagrant to the latest release, run:
+
+  ```bash
+  brew upgrade hashicorp/tap/hashicorp-vagrant
+  ```
+</Tip>

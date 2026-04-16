@@ -1,0 +1,94 @@
+---
+title: "Contributing to HashiCorp Homebrew Tap"
+description: "Learn how to contribute to the HashiCorp Homebrew Tap — add new product support, update formulae, and work with the automation pipeline."
+---
+
+The HashiCorp Homebrew Tap is an open-source project that packages HashiCorp products for installation via Homebrew. Contributions are welcome — whether you're adding support for a new product, expanding cask coverage, improving automation, or fixing a bug. This guide walks you through the project structure, contribution types, and the steps to open a pull request.
+
+## Prerequisites
+
+Before contributing, make sure you have the following in place:
+
+- **Go** installed on your machine. The project's Go utilities live under `util/` and require a working Go toolchain.
+- **Go environment variables** configured correctly (`GOPATH`, `GOROOT`, etc.). If you're new to Go, the [goenv installation guide](https://github.com/syndbg/goenv/blob/master/INSTALL.md) is a good starting point. Installing the latest stable version via `goenv` is recommended.
+
+## Types of contributions
+
+There are four primary ways to contribute to the tap:
+
+- **Adding a new formula** — add a new HashiCorp product available on [releases.hashicorp.com](https://releases.hashicorp.com) as a Homebrew Formula.
+- **Adding cask support** — package a product's `.dmg` or `.pkg` macOS installer as a Homebrew Cask.
+- **Updating configs or templates** — improve the `config.hcl` entries, Go templates, or HCL schema for existing products.
+- **Fixing bugs** — address issues in the `formula_templater` CLI, `lambda_trigger` Lambda function, or CI/CD workflows.
+
+<CardGroup cols={3}>
+  <Card title="Add a formula or cask" icon="plus" href="/contributing/adding-a-formula">
+    Step-by-step guide to adding support for a new HashiCorp product.
+  </Card>
+  <Card title="formula_templater reference" icon="terminal" href="/contributing/formula-templater">
+    Reference for the CLI tool that generates Homebrew Ruby files from HCL config.
+  </Card>
+  <Card title="Automation pipeline" icon="rotate" href="/contributing/automation-pipeline">
+    How the tap automatically detects new releases and updates formulae.
+  </Card>
+</CardGroup>
+
+## Getting started
+
+Clone the repository to your local machine:
+
+```bash
+git clone git@github.com:hashicorp/homebrew-tap.git
+cd homebrew-tap
+```
+
+## Repository structure
+
+```
+homebrew-tap/
+├── Formula/                      # Ruby formula files (.rb) for CLI tools
+├── Casks/                        # Ruby cask files (.rb) for macOS GUI apps
+├── util/
+│   ├── formula_templater/        # Go CLI that generates Formula and Cask .rb files
+│   │   ├── main.go               # Entry point; parses -cask flag and arguments
+│   │   ├── formula.go            # printFormula / printCask functions
+│   │   ├── config.go             # HCL config structs (FormulaConfig, CaskConfig)
+│   │   ├── shasums.go            # SHA256 checksum fetching from releases.hashicorp.com
+│   │   ├── config.hcl            # Product definitions for all supported products
+│   │   └── templates/
+│   │       ├── formula.tmpl      # Go template for Formula .rb files
+│   │       └── cask.tmpl         # Go template for Cask .rb files
+│   └── lambda_trigger/           # AWS Lambda that detects new releases and triggers updates
+│       ├── lambda_trigger.go     # Lambda handler; product lists and workflow dispatch
+│       └── releases.go           # Queries api.releases.hashicorp.com for latest versions
+└── .github/
+    └── workflows/
+        ├── ci.yml                        # Runs tests on PRs and pushes to util/
+        ├── publish-formula-update.yml    # Auto-updates formulae on new releases
+        └── manual-publish-formula-update.yml  # Manual trigger for formula updates
+```
+
+## Makefile commands
+
+The root `Makefile` provides shortcuts for common operations:
+
+| Command | Description |
+|---|---|
+| `make all` | Build both `formula_templater` and `lambda_trigger` |
+| `make test-all` | Run all tests for both utilities |
+| `make formula_templater` | Build only the `formula_templater` CLI |
+| `make lambda_trigger` | Build only the `lambda_trigger` Lambda binary |
+| `make ci-test-formula_templater` | Run `formula_templater` tests with `tparse` output |
+| `make ci-test-lambda_trigger` | Run `lambda_trigger` tests with `tparse` output |
+| `make clean` | Remove built binaries |
+
+## PR process
+
+When your changes are ready:
+
+1. Open a pull request against the `master` branch.
+2. The `ci.yml` workflow runs automatically to build and test both utilities.
+3. A maintainer reviews and merges the PR.
+4. For formula and cask file changes, the updated product is available via the tap within minutes of merge.
+
+The pull request template includes a PCI review checklist. Fill in a clear description of the change, any revert plan if applicable, and note any impact on security controls.

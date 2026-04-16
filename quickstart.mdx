@@ -1,80 +1,144 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Quickstart: install HashiCorp tools via Homebrew"
+description: "Step-by-step guide to installing Homebrew, adding the HashiCorp tap, and installing your first HashiCorp product on macOS or Linux."
 ---
 
-## Get started in three steps
+This guide walks you through adding the HashiCorp Homebrew Tap to your system and installing your first HashiCorp product. By the end you will have Homebrew installed, the `hashicorp/tap` tap registered, and a working HashiCorp CLI tool ready to use.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+- macOS or Linux
+- A terminal with internet access
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+If you already have Homebrew installed, you can skip directly to step 2.
 
-### Step 2: Deploy your changes
+## Installation steps
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+<Steps>
+  <Step title="Install Homebrew">
+    If Homebrew is not yet on your system, install it by running the official install script:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    ```bash
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    ```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    Follow the prompts. On Linux, the installer will also print post-install instructions to add Homebrew to your shell's `PATH` — run those commands before continuing.
+  </Step>
 
-### Step 3: Go live
+  <Step title="Add the HashiCorp tap">
+    Register the HashiCorp tap with Homebrew. This makes all formulae in the tap available in `brew search` results and lets you refer to them by their short names in subsequent commands.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    ```bash
+    brew tap hashicorp/tap
+    ```
 
-## Next steps
+    <Note>
+      To clone the tap via SSH instead of HTTPS, pass the full repository URL:
 
-Now that you have your docs running, explore these key features:
+      ```bash
+      brew tap hashicorp/tap https://github.com/hashicorp/homebrew-tap
+      ```
+    </Note>
+  </Step>
+
+  <Step title="Install a product">
+    Install Terraform as your first HashiCorp product:
+
+    ```bash
+    brew install hashicorp/tap/terraform
+    ```
+
+    Always use the fully qualified name `hashicorp/tap/<product>` when installing from an external tap. Homebrew requires this prefix outside of search to avoid ambiguity with packages that may exist in other taps or in `homebrew-core`.
+  </Step>
+
+  <Step title="Verify the installation">
+    Confirm that Terraform installed correctly and is on your `PATH`:
+
+    ```bash
+    terraform --version
+    ```
+
+    You should see output like `Terraform v1.x.x` confirming the installed version.
+  </Step>
+</Steps>
+
+## Install without adding the tap first
+
+You do not have to register the tap before installing a package. Homebrew accepts the fully qualified name directly and adds the tap automatically:
+
+```bash
+brew install hashicorp/tap/vault
+```
+
+This is equivalent to running `brew tap hashicorp/tap` followed by `brew install hashicorp/tap/vault`. Adding the tap explicitly first is useful if you want packages to appear in `brew search` results before you install anything.
+
+## Install popular products
+
+<Tabs>
+  <Tab title="Terraform">
+    ```bash
+    brew install hashicorp/tap/terraform
+    ```
+
+    Verify:
+
+    ```bash
+    terraform --version
+    ```
+  </Tab>
+  <Tab title="Vault">
+    ```bash
+    brew install hashicorp/tap/vault
+    ```
+
+    Verify:
+
+    ```bash
+    vault --version
+    ```
+  </Tab>
+  <Tab title="Consul">
+    ```bash
+    brew install hashicorp/tap/consul
+    ```
+
+    Verify:
+
+    ```bash
+    consul --version
+    ```
+  </Tab>
+  <Tab title="Nomad">
+    ```bash
+    brew install hashicorp/tap/nomad
+    ```
+
+    Verify:
+
+    ```bash
+    nomad --version
+    ```
+  </Tab>
+  <Tab title="Packer">
+    ```bash
+    brew install hashicorp/tap/packer
+    ```
+
+    Verify:
+
+    ```bash
+    packer --version
+    ```
+  </Tab>
+</Tabs>
+
+## What's next
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Package overview" icon="list" href="/packages/overview">
+    See the full list of formulae and casks available in this tap.
+  </Card>
+  <Card title="Why this tap?" icon="shield-check" href="/guides/why-this-tap">
+    Learn why the HashiCorp tap provides more trustworthy binaries than homebrew-core.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
